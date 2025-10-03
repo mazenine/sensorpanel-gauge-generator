@@ -898,6 +898,68 @@ export default function App(){
               </CardContent>
             </Card>
 
+<Card>
+  <CardHeader className="pb-2">
+    <CardTitle className="text-base">Glow</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-3">
+    <div className="flex items-center gap-3">
+      <Label className="w-28">Enabled</Label>
+      <Switch
+        checked={preset.glow.enabled}
+        onCheckedChange={(v) => update("glow.enabled", v)}
+      />
+    </div>
+
+    <div className="flex items-center gap-3">
+      <Label className="w-28">Strength</Label>
+      <Slider
+        max={100}
+        min={0}
+        step={1}
+        value={[preset.glow.strength]}
+        onValueChange={(v) => update("glow.strength", v[0])}
+      />
+      <Input
+        className="w-20"
+        type="number"
+        value={preset.glow.strength}
+        onChange={(e) =>
+          update(
+            "glow.strength",
+            clamp(parseInt(e.target.value || "0"), 0, 100)
+          )
+        }
+      />
+    </div>
+
+    <div className="flex items-center gap-3">
+      <Label className="w-28">Thickness</Label>
+      <Slider
+        max={3}
+        min={0.1}
+        step={0.05}
+        value={[preset.glow.thickness]}
+        onValueChange={(v) => update("glow.thickness", v[0])}
+      />
+      <Input
+        className="w-20"
+        type="number"
+        step={0.05}
+        value={preset.glow.thickness}
+        onChange={(e) =>
+          update(
+            "glow.thickness",
+            clamp(parseFloat(e.target.value || "0"), 0.1, 3)
+          )
+        }
+      />
+    </div>
+  </CardContent>
+</Card>
+
+
+
             <div className="pb-10" />
           </div>
         </aside>

@@ -1,20 +1,14 @@
-name: Deploy v2 to GitHub Pages
+name: Deploy v2 (manual folder copy)
 
 on:
   push:
     branches: [ v2 ]
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages-v2"
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,19 +16,22 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
       - run: npm ci
       - run: npm run build
-      # 👇 This sets up Pages properly (required!)
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: https://mazenine.github.io/sensorpanel-gauge-generator/v2/
-    steps:
-      - uses: actions/deploy-pages@v4
+      - name: Deploy v2 to gh-pages/v2
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+          mkdir -p v2
+          rm -rf v2/*
+          cp -r dist/* v2/
+
+          git add v2
+          git commit -m "Update v2 build $(date)"
+          git push origin gh-pages

@@ -1,4 +1,4 @@
-name: Deploy v2 (manual folder copy)
+name: Deploy v2 to /v2 subfolder
 
 on:
   push:
@@ -20,18 +20,25 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Deploy v2 to gh-pages/v2
+      - name: Deploy to gh-pages/v2
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Create a temp dir and copy build there
+          mkdir temp-build
+          cp -r dist/* temp-build/
 
+          # Fetch the gh-pages branch into a separate worktree
           git fetch origin gh-pages
-          git checkout gh-pages
+          git worktree add gh-pages-branch gh-pages
 
+          # Copy build into /v2 subfolder inside gh-pages branch
+          cd gh-pages-branch
           mkdir -p v2
           rm -rf v2/*
-          cp -r dist/* v2/
+          cp -r ../temp-build/* v2/
 
+          # Commit and push
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add v2
-          git commit -m "Update v2 build $(date)"
+          git commit -m "Update v2 build $(date)" || echo "No changes to commit"
           git push origin gh-pages

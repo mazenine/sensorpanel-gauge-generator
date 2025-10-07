@@ -1,0 +1,88 @@
+{
+  "theme": "dark",
+  "mode": "arc",
+  "openingDirection": "bottom",
+  "states": 101,
+  "canvas": {
+    "width": 400,
+    "height": 400,
+    "background": "transparent"
+  },
+  "arc": {
+    "radius": 150,
+    "thickness": 30,
+    "roundCaps": true
+  },
+  "bar": {
+    "orientation": "horizontal",
+    "direction": "ltr",
+    "length": 420,
+    "thickness": 24,
+    "cornerRadius": 12,
+    "squareEnds": false
+  },
+  "base": {
+    "enabled": true,
+    "color": "rgba(40,50,60,1)",
+    "opacity": 0.5,
+    "preset": "dark",
+    "sameGeometryAsMain": true,
+    "thicknessScale": 1
+  },
+  "main": {
+    "fillMode": "gradient3",
+    "colorSolid": "#7B2FF7",
+    "gradient": {
+      "stops": [
+        { "pos": 0.0, "color": "#7B2FF7" },
+        { "pos": 0.5, "color": "#F107A3" },
+        { "pos": 1.0, "color": "#FF8C00" }
+      ]
+    },
+    "segmented": false,
+    "segments": 16,
+    "segmentGap": 2,
+    "frame": {
+      "enabled": false,
+      "color": "rgba(255,255,255,0.9)",
+      "thickness": 1.35
+    }
+  },
+  "warnings": {
+    "start": {
+      "enabled": false,
+      "lengthPct": 0.15,
+      "mode": "solid",
+      "colorSolid": "#00E0FF",
+      "gradient": {
+        "stops": [
+          { "pos": 0, "color": "#00E0FF" },
+          { "pos": 1, "color": "#00B2FF" }
+        ]
+      }
+    },
+    "end": {
+      "enabled": false,
+      "lengthPct": 0.20,
+      "mode": "solid",
+      "colorSolid": "#FF3B30",
+      "gradient": {
+        "stops": [
+          { "pos": 0, "color": "#FFA500" },
+          { "pos": 1, "color": "#FF3B30" }
+        ]
+      }
+    }
+  },
+  "glow": {
+    "enabled": true,
+    "strength": 18,
+    "thickness": 1.25,
+    "mode": "legacy"
+  },
+  "usability": {
+    "showGrid": false
+  },
+  "namePrefix": "vibrant_arc",
+  "presetName": "Vibrant Gradient Arc"
+}

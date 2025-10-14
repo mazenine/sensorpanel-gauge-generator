@@ -1,6 +1,8 @@
 // src/renderUtils.ts
 // Rendering utilities + gauge painters (arc + bar) with glow, warnings & segmentation
 
+import type { Preset } from "./types";
+
 // -----------------------------------------------------------------------------
 // BASIC HELPERS
 export const clamp = (v: number, min: number, max: number) =>
@@ -198,6 +200,71 @@ function readGlow(preset: any) {
     legacyOuterThickness: thicknessScale,
     strength,
   };
+}
+
+// -----------------------------------------------------------------------------
+// LAYOUT HELPERS
+function glowOuterLineWidth(glow: ReturnType<typeof readGlow>, baseLineWidth: number) {
+  if (!glow.enabled || baseLineWidth <= 0) return 0;
+
+  if (glow.mode === "soft") {
+    if (!glow.haloOuter) return 0;
+    const spread = baseLineWidth * (0.1 + glow.haloThickness * 0.45);
+    return baseLineWidth + spread;
+  }
+
+  if (glow.mode === "ring") {
+    if (glow.ringPasses <= 0) return 0;
+    const spread = baseLineWidth * (0.05 + glow.ringThickness * 0.15);
+    return baseLineWidth + spread;
+  }
+
+  const spread = baseLineWidth * (0.05 + glow.legacyOuterThickness * 0.25);
+  return baseLineWidth + spread;
+}
+
+export function computeGaugeContentBounds(preset: Preset | any) {
+  if (!preset) return { width: 0, height: 0 };
+
+  const mode = preset.mode ?? "arc";
+  const arc = preset.arc ?? {};
+  const bar = preset.bar ?? {};
+  const base = preset.base ?? {};
+  const margin = (base as any).margin ?? 0;
+  const paddingArc = 20;
+  const paddingBar = 20;
+  const glow = readGlow(preset);
+
+  if (mode === "arc") {
+    const radius = arc.radius ?? 200;
+    const mainThick = arc.thickness ?? 24;
+    const baseThick = base?.enabled ? mainThick * (base.thicknessScale ?? 1) : 0;
+    const glowWidth = glowOuterLineWidth(glow, mainThick);
+    const effectiveWidth = Math.max(mainThick, baseThick, glowWidth);
+    const half = effectiveWidth / 2;
+    const capAllowance = arc.roundCaps ? half : 0;
+    const diameter = (radius + half + capAllowance) * 2;
+    const total = diameter + margin * 2 + paddingArc * 2;
+    return { width: total, height: total };
+  }
+
+  const len = bar.length ?? 420;
+  const thick = bar.thickness ?? 24;
+  const baseThick = base?.enabled ? thick * (base.thicknessScale ?? 1) : 0;
+  const glowWidth = glowOuterLineWidth(glow, thick);
+  const thicknessEnvelope = Math.max(thick, baseThick, glowWidth);
+  const lengthEnvelope = len + (glowWidth > 0 ? glowWidth : 0);
+  const orientation = bar.orientation ?? "horizontal";
+  const width =
+    orientation === "vertical"
+      ? thicknessEnvelope + margin * 2 + paddingBar
+      : lengthEnvelope + margin * 2 + paddingBar;
+  const height =
+    orientation === "vertical"
+      ? lengthEnvelope + margin * 2 + paddingBar
+      : thicknessEnvelope + margin * 2 + paddingBar;
+
+  return { width, height };
 }
 
 // -----------------------------------------------------------------------------

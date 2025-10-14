@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { computeGaugeContentBounds } from "@/renderUtils";
 
 export function LivePreviewCard({ preset, drawArcGauge, drawBarGauge, value01 = 0.75 }: any) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -22,35 +23,9 @@ export function LivePreviewCard({ preset, drawArcGauge, drawBarGauge, value01 = 
     }
 
     // --- estimate logical content size ---
-    const arc = preset.arc ?? {};
-    const bar = preset.bar ?? {};
-    const glow = preset.glow ?? {};
-    const base = preset.base ?? {};
+    const { width: reqW, height: reqH } = computeGaugeContentBounds(preset);
     const mode = preset.mode ?? "arc";
-
-    const radius = arc.radius ?? 200;
-    const barLen = bar.length ?? 420;
-    const barThick = bar.thickness ?? 24;
-    const glowThick = glow.haloThickness ?? 0;
-    const margin = base.margin ?? 0;
-    const pad = 20; // padding to avoid edge clipping
-    const hasRoundCaps = arc?.roundCaps ?? false;
-    const capAllowance = hasRoundCaps ? (arc?.thickness ?? 0) / 2 : 0;
-
-    // --- Compute required size with padding and round-cap allowance ---
-    const reqW =
-      mode === "arc"
-        ? (radius + glowThick + margin + pad + capAllowance) * 2
-        : bar.orientation === "vertical"
-        ? barThick + margin * 2 + glowThick * 2 + pad
-        : barLen + margin * 2 + glowThick * 2 + pad;
-
-    const reqH =
-      mode === "arc"
-        ? (radius + glowThick + margin + pad + capAllowance) * 2
-        : bar.orientation === "vertical"
-        ? barLen + margin * 2 + glowThick * 2 + pad
-        : barThick + margin * 2 + glowThick * 2 + pad;
+    const bar = preset.bar ?? {};
 
     const s = Math.min(cw / reqW, ch / reqH, 1);
     setScale(s);

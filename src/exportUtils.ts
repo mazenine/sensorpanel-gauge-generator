@@ -3,7 +3,14 @@
 
 import JSZip from "jszip";
 import type { Preset } from "./types";
-import { buildCanvas, clamp, pad, drawArcGauge, drawBarGauge } from "./renderUtils";
+import {
+  buildCanvas,
+  clamp,
+  pad,
+  drawArcGauge,
+  drawBarGauge,
+  computeGaugeContentBounds,
+} from "./renderUtils";
 
 /**
  * Decide how many PNG frames to export based on preset mode.
@@ -36,10 +43,10 @@ export async function renderStateBlob(
   valueIndex: number,
   total: number
 ): Promise<Blob | null> {
-const { width, height } = preset.canvas;
-offscreen.width = width;
-offscreen.height = height;
-const ctx = offscreen.getContext("2d")!;
+  const { width, height } = preset.canvas;
+  offscreen.width = width;
+  offscreen.height = height;
+  const ctx = offscreen.getContext("2d")!;
 
   // Build base canvas at full resolution
   buildCanvas(ctx, width, height);
@@ -52,36 +59,10 @@ const ctx = offscreen.getContext("2d")!;
   }
 
   // --- Compute gauge size and scaling (same logic as LivePreviewCard)
-  const arc = preset.arc ?? {};
-  const bar = preset.bar ?? {};
-  const glow = preset.glow ?? {};
-  const base = preset.base ?? {};
-  const mode = preset.mode ?? "arc";
-
-  const radius = arc.radius ?? 200;
-  const barLen = bar.length ?? 420;
-  const barThick = bar.thickness ?? 24;
-  const glowThick = glow.thickness ?? 0; // ✅ use .thickness (not haloThickness)
-  const margin = (base as any).margin ?? 0; // ✅ base.margin may not exist in type
-  const pad = 20;
-  const hasRoundCaps = arc.roundCaps ?? false;
-  const capAllowance = hasRoundCaps ? (arc.thickness ?? 0) / 2 : 0;
-
-  const reqW =
-    mode === "arc"
-      ? (radius + glowThick + margin + pad + capAllowance) * 2
-      : bar.orientation === "vertical"
-      ? barThick + margin * 2 + glowThick * 2 + pad
-      : barLen + margin * 2 + glowThick * 2 + pad;
-
-  const reqH =
-    mode === "arc"
-      ? (radius + glowThick + margin + pad + capAllowance) * 2
-      : bar.orientation === "vertical"
-      ? barLen + margin * 2 + glowThick * 2 + pad
-      : barThick + margin * 2 + glowThick * 2 + pad;
-
-  const s = Math.min(width / reqW, height / reqH, 1);
+  const { width: reqW, height: reqH } = computeGaugeContentBounds(preset);
+  const safeW = reqW > 0 ? reqW : width;
+  const safeH = reqH > 0 ? reqH : height;
+  const s = Math.min(width / safeW, height / safeH, 1);
 
   ctx.save();
   ctx.translate(width / 2, height / 2);
@@ -128,46 +109,18 @@ export async function exportZip(preset: Preset, namePrefix?: string) {
   const zpad = count >= 100 ? 3 : 2;
 
   // --- Precompute geometry for consistent scaling
-  const arc = preset.arc ?? {};
-  const bar = preset.bar ?? {};
-  const glow = preset.glow ?? {};
-  const base = preset.base ?? {};
-  const mode = preset.mode ?? "arc";
-
-  const radius = arc.radius ?? 200;
-  const barLen = bar.length ?? 420;
-  const barThick = bar.thickness ?? 24;
-  const glowThick = glow.thickness ?? 0;
-  const margin = (base as any).margin ?? 0;
-  const padding = 20; // ✅ renamed from pad to padding
-  const hasRoundCaps = arc.roundCaps ?? false;
-  const capAllowance = hasRoundCaps ? (arc.thickness ?? 0) / 2 : 0;
-
-  const reqW =
-    mode === "arc"
-      ? (radius + glowThick + margin + padding + capAllowance) * 2
-      : bar.orientation === "vertical"
-      ? barThick + margin * 2 + glowThick * 2 + padding
-      : barLen + margin * 2 + glowThick * 2 + padding;
-
-  const reqH =
-    mode === "arc"
-      ? (radius + glowThick + margin + padding + capAllowance) * 2
-      : bar.orientation === "vertical"
-      ? barLen + margin * 2 + glowThick * 2 + padding
-      : barThick + margin * 2 + glowThick * 2 + padding;
-
-  const s = Math.min(
-    preset.canvas.width / reqW,
-    preset.canvas.height / reqH,
-    1
-  );
+  const { width: reqW, height: reqH } = computeGaugeContentBounds(preset);
+  const canvasW = preset.canvas.width;
+  const canvasH = preset.canvas.height;
+  const safeW = reqW > 0 ? reqW : canvasW;
+  const safeH = reqH > 0 ? reqH : canvasH;
+  const s = Math.min(canvasW / safeW, canvasH / safeH, 1);
 
   for (let i = 0; i < count; i++) {
-const { width, height } = preset.canvas;
-offscreen.width = width;
-offscreen.height = height;
-const ctx = offscreen.getContext("2d")!;
+    const { width, height } = preset.canvas;
+    offscreen.width = width;
+    offscreen.height = height;
+    const ctx = offscreen.getContext("2d")!;
 
     buildCanvas(ctx, width, height);
     ctx.clearRect(0, 0, width, height);
